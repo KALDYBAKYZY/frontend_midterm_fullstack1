@@ -13,7 +13,7 @@ export const MarketProvider = ({ children }) => {
   const fetchStocks = async () => {
     try {
       const res = await api.get("/stocks");
-      setStocks(res.data);
+      setStocks(res.data); 
     } catch (err) {
       console.error("Failed to fetch stocks");
     }
@@ -21,26 +21,35 @@ export const MarketProvider = ({ children }) => {
 
   const updatePrice = ({ ticker, price }) => {
     setStocks((prev) =>
-      prev.map((s) => s.ticker === ticker ? { ...s, price } : s)
+      prev.map((s) => s.ticker === ticker ? { ...s, price } : s) 
     );
   };
 
   useEffect(() => {
     if (!token) return;
-
     fetchStocks();
+  }, [token]);
+
+  useEffect(() => {
+    if (!token) return;
 
     const wsUrl = import.meta.env.VITE_WS_URL || "ws://localhost:5000";
     const socket = new WebSocket(wsUrl, token);
     socketRef.current = socket;
 
+    let fallbackInterval = null;
+
     socket.onopen = () => {
       setConnected(true);
+      if (fallbackInterval) {
+        clearInterval(fallbackInterval);
+        fallbackInterval = null;
+      }
     };
 
     socket.onmessage = (event) => {
       try {
-        const data = JSON.parse(event.data);
+        const data = JSON.parse(event.data); 
         if (data.type === "TICKER_UPDATE") {
           updatePrice(data.payload);
         }
@@ -49,14 +58,20 @@ export const MarketProvider = ({ children }) => {
       }
     };
 
-    socket.onclose = () => setConnected(false);
+    socket.onclose = () => {
+      setConnected(false);
+      fallbackInterval = setInterval(fetchStocks, 2000);
+    };
 
     socket.onerror = (err) => {
       console.error("WS error", err);
       setConnected(false);
     };
 
-    return () => socket.close();
+    return () => {
+      socket.close();
+      if (fallbackInterval) clearInterval(fallbackInterval);
+    };
   }, [token]);
 
   return (
