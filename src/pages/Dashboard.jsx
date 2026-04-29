@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react"; 
 import { useAuth } from "../context/AuthContext";
 import { useMarket } from "../context/MarketContext";
 import api from "../api/axios";
@@ -31,27 +31,27 @@ export default function Dashboard() {
     fetchMyData();
   }, []);
 
-  // Recalculate net worth live using stocks from MarketContext
-  const calcNetWorth = () => {
+  useEffect(() => {
+    if (user?.wallet !== undefined) {
+      fetchMyData();
+    }
+  }, [user?.wallet]); 
+
+  const netWorth = useMemo(() => {
     if (!user) return 0;
     const holdingsValue = holdings.reduce((sum, h) => {
-      const liveStock = stocks.find(
-        (s) => s._id === (h.stock?._id || h.stock)
-      );
+      const liveStock = stocks.find((s) => s._id === (h.stock?._id || h.stock));
       const price = liveStock ? liveStock.price : h.stock?.price || 0;
       return sum + price * h.shares;
     }, 0);
     return user.wallet + holdingsValue;
-  };
+  }, [user, holdings, stocks]);  
 
   const handleCreateStock = async (e) => {
     e.preventDefault();
     setMsg("");
     try {
-      const res = await api.post("/stocks/create", {
-        ticker,
-        price: initialPrice,
-      });
+      const res = await api.post("/stocks/create", { ticker, price: initialPrice });
       setMyStock(res.data);
       setMsg("Stock created successfully!");
     } catch (err) {
@@ -75,7 +75,6 @@ export default function Dashboard() {
     }
   };
 
-  // Get live price of my stock
   const myLiveStock = myStock
     ? stocks.find((s) => s.ticker === myStock.ticker) || myStock
     : null;
@@ -88,30 +87,23 @@ export default function Dashboard() {
           <span className={`ws-dot ${connected ? "green" : "red"}`} />
           <span className="ws-label">{connected ? "Live" : "Offline"}</span>
           <span className="wallet">${user?.wallet?.toFixed(2)}</span>
-          <button className="btn-logout" onClick={logout}>
-            Logout
-          </button>
+          <button className="btn-logout" onClick={logout}>Logout</button>
         </div>
       </header>
 
       <div className="dashboard-grid">
-        {/* Net Worth */}
         <div className="card wide">
           <div className="card-label">Total Net Worth</div>
-          <div className="card-value big">${calcNetWorth().toFixed(2)}</div>
-          <div className="card-sub">
-            Wallet: ${user?.wallet?.toFixed(2)} + Holdings
-          </div>
+          <div className="card-value big">${netWorth.toFixed(2)}</div>  {/* ✅ */}
+          <div className="card-sub">Wallet: ${user?.wallet?.toFixed(2)} + Holdings</div>
         </div>
 
-        {/* My Stock */}
         <div className="card">
           <div className="card-label">My Stock</div>
           {myLiveStock ? (
             <>
               <div className="card-value">{myLiveStock.ticker}</div>
               <div className="card-price">${myLiveStock.price.toFixed(2)}</div>
-
               <form onSubmit={handleUpdatePrice} style={{ marginTop: "1rem" }}>
                 <div className="form-row">
                   <input
@@ -122,9 +114,7 @@ export default function Dashboard() {
                     onChange={(e) => setNewPrice(e.target.value)}
                     placeholder="New price"
                   />
-                  <button type="submit" className="btn-small">
-                    Update
-                  </button>
+                  <button type="submit" className="btn-small">Update</button>
                 </div>
               </form>
             </>
@@ -149,15 +139,12 @@ export default function Dashboard() {
                   min="1"
                 />
               </div>
-              <button type="submit" className="btn-primary">
-                List My Stock
-              </button>
+              <button type="submit" className="btn-primary">List My Stock</button>
             </form>
           )}
           {msg && <div className="msg">{msg}</div>}
         </div>
 
-        {/* Holdings */}
         <div className="card">
           <div className="card-label">Portfolio Holdings</div>
           {holdings.length === 0 ? (
@@ -174,13 +161,9 @@ export default function Dashboard() {
               </thead>
               <tbody>
                 {holdings.map((h) => {
-                  const liveStock = stocks.find(
-                    (s) => s._id === (h.stock?._id || h.stock)
-                  );
+                  const liveStock = stocks.find((s) => s._id === (h.stock?._id || h.stock));
                   const price = liveStock ? liveStock.price : h.stock?.price || 0;
-                  const ticker = liveStock
-                    ? liveStock.ticker
-                    : h.stock?.ticker || "—";
+                  const ticker = liveStock ? liveStock.ticker : h.stock?.ticker || "—";
                   const value = price * h.shares;
                   return (
                     <tr key={h._id}>

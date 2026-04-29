@@ -21,9 +21,9 @@ export default function Market() {
     const shares = parseInt(amounts[stock._id] || 1);
     setMsg(stock._id, "");
     try {
-      const res = await api.post("/trade/buy", { stockId: stock._id, shares });
+      await api.post("/trade/buy", { stockId: stock._id, shares });
       setMsg(stock._id, `✓ Bought ${shares} shares`);
-      refreshUser();
+      await refreshUser(); 
     } catch (err) {
       setMsg(stock._id, err.response?.data?.message || "Buy failed");
     }
@@ -33,9 +33,9 @@ export default function Market() {
     const shares = parseInt(amounts[stock._id] || 1);
     setMsg(stock._id, "");
     try {
-      const res = await api.post("/trade/sell", { stockId: stock._id, shares });
+      await api.post("/trade/sell", { stockId: stock._id, shares });
       setMsg(stock._id, `✓ Sold ${shares} shares`);
-      refreshUser();
+      await refreshUser();  
     } catch (err) {
       setMsg(stock._id, err.response?.data?.message || "Sell failed");
     }
