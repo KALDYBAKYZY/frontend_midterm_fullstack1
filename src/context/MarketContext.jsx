@@ -13,17 +13,15 @@ export const MarketProvider = ({ children }) => {
   const fetchStocks = async () => {
     try {
       const res = await api.get("/stocks");
-      setStocks(res.data);
+      setStocks(res.data);                  
     } catch (err) {
       console.error("Failed to fetch stocks");
     }
   };
 
-  const updatePrice = ({ ticker, price, id }) => {
+  const updatePrice = ({ ticker, price }) => {
     setStocks((prev) =>
-      prev.map((s) =>
-        s.ticker === ticker ? { ...s, price } : s
-      )
+      prev.map((s) => s.ticker === ticker ? { ...s, price } : s) 
     );
   };
 
@@ -31,18 +29,19 @@ export const MarketProvider = ({ children }) => {
     if (!token) return;
 
     fetchStocks();
+
     const wsUrl = import.meta.env.VITE_WS_URL || "ws://localhost:5000";
-    const socket = new WebSocket(wsUrl, token);
+    const socket = new WebSocket(wsUrl);       
     socketRef.current = socket;
 
     socket.onopen = () => {
       setConnected(true);
+      socket.send(JSON.stringify({ type: "AUTH", token }));
     };
 
     socket.onmessage = (event) => {
       try {
-        const data = JSON.parse(event.data);
-
+        const data = JSON.parse(event.data); 
         if (data.type === "TICKER_UPDATE") {
           updatePrice(data.payload);
         }
@@ -51,18 +50,14 @@ export const MarketProvider = ({ children }) => {
       }
     };
 
-    socket.onclose = () => {
-      setConnected(false);
-    };
+    socket.onclose = () => setConnected(false);
 
     socket.onerror = (err) => {
       console.error("WS error", err);
       setConnected(false);
     };
 
-    return () => {
-      socket.close();
-    };
+    return () => socket.close();
   }, [token]);
 
   return (
