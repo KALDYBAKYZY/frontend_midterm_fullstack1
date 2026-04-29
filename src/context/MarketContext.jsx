@@ -1,12 +1,4 @@
-// MarketContext.jsx
-import {
-  createContext,
-  useContext,
-  useState,
-  useEffect,
-  useRef,
-} from "react";
-
+import { createContext, useContext, useState, useEffect, useRef } from "react";
 import { useAuth } from "./AuthContext";
 import api from "../api/axios";
 
@@ -14,12 +6,9 @@ const MarketContext = createContext(null);
 
 export const MarketProvider = ({ children }) => {
   const { token } = useAuth();
-
   const [stocks, setStocks] = useState([]);
   const [connected, setConnected] = useState(false);
-
   const socketRef = useRef(null);
-
   const fetchStocks = async () => {
     try {
       const res = await api.get("/stocks");
@@ -49,13 +38,10 @@ export const MarketProvider = ({ children }) => {
     if (!token) return;
 
     const wsUrl =
-      import.meta.env.VITE_WS_URL ||
-      "ws://localhost:5000";
+      import.meta.env.VITE_WS_URL || "ws://localhost:5000";
 
     const socket = new WebSocket(wsUrl, token);
-
     socketRef.current = socket;
-
     let interval = null;
 
     socket.onopen = () => {
@@ -106,12 +92,8 @@ export const MarketProvider = ({ children }) => {
         stocks,
         connected,
         fetchStocks,
-      }}
-    >
-      {children}
-    </MarketContext.Provider>
+      }}> {children} </MarketContext.Provider>
   );
 };
 
-export const useMarket = () =>
-  useContext(MarketContext);
+export const useMarket = () => useContext(MarketContext);

@@ -6,7 +6,6 @@ import api from "../api/axios";
 export default function Dashboard() {
   const { user, logout } = useAuth();
   const { stocks, connected } = useMarket();
-
   const [myStock, setMyStock] = useState(null);
   const [holdings, setHoldings] = useState([]);
   const [ticker, setTicker] = useState("");
@@ -66,9 +65,7 @@ export default function Dashboard() {
     }
   };
 
-  const myLiveStock = myStock
-    ? stocks.find((s) => s.ticker === myStock.ticker) || myStock
-    : null;
+  const myLiveStock = myStock ? stocks.find((s) => s.ticker === myStock.ticker) || myStock : null;
 
   return (
     <div className="page">
@@ -92,7 +89,6 @@ export default function Dashboard() {
       </header>
 
       <div className="dashboard-grid">
-        {/* MY STOCK */}
         <div className="card">
           <div className="card-label">MY STOCK</div>
 
@@ -171,8 +167,6 @@ export default function Dashboard() {
 
           {msg && <div className="msg">{msg}</div>}
         </div>
-
-        {/* HOLDINGS */}
         <div className="card">
           <div className="card-label">
             PORTFOLIO HOLDINGS
