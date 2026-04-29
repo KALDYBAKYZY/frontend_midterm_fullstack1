@@ -6,12 +6,14 @@ import api from "../api/axios";
 export default function Dashboard() {
   const { user, logout } = useAuth();
   const { stocks, connected } = useMarket();
+
   const [myStock, setMyStock] = useState(null);
   const [holdings, setHoldings] = useState([]);
   const [ticker, setTicker] = useState("");
   const [initialPrice, setInitialPrice] = useState(100);
   const [newPrice, setNewPrice] = useState("");
   const [msg, setMsg] = useState("");
+  const [loadingData, setLoadingData] = useState(true);
 
   const fetchMyData = async () => {
     try {
@@ -24,6 +26,8 @@ export default function Dashboard() {
       setHoldings(holdingsRes.data);
     } catch (err) {
       console.error("Failed to load dashboard data");
+    } finally {
+      setLoadingData(false);
     }
   };
 
@@ -65,7 +69,9 @@ export default function Dashboard() {
     }
   };
 
-  const myLiveStock = myStock ? stocks.find((s) => s.ticker === myStock.ticker) || myStock : null;
+  const myLiveStock = myStock
+    ? stocks.find((s) => s.ticker === myStock.ticker) || myStock
+    : null;
 
   return (
     <div className="page">
@@ -89,10 +95,13 @@ export default function Dashboard() {
       </header>
 
       <div className="dashboard-grid">
+        {/* MY STOCK */}
         <div className="card">
           <div className="card-label">MY STOCK</div>
 
-          {myLiveStock ? (
+          {loadingData ? (
+            <p className="empty">Loading...</p>
+          ) : myLiveStock ? (
             <>
               <div className="card-value">
                 {myLiveStock.ticker}
@@ -106,25 +115,22 @@ export default function Dashboard() {
                 onSubmit={handleUpdatePrice}
                 style={{ marginTop: "1.5rem" }}
               >
-                <div className="form-row">
+                <div className="form-group">
+                  <label>NEW PRICE</label>
                   <input
                     type="number"
                     step="0.01"
                     min="0.01"
                     value={newPrice}
-                    onChange={(e) =>
-                      setNewPrice(e.target.value)
-                    }
-                    placeholder="New price"
+                    onChange={(e) => setNewPrice(e.target.value)}
+                    placeholder="Enter new price"
+                    required
                   />
-
-                  <button
-                    type="submit"
-                    className="btn-small"
-                  >
-                    UPDATE
-                  </button>
                 </div>
+
+                <button type="submit" className="btn-primary">
+                  UPDATE PRICE
+                </button>
               </form>
             </>
           ) : (
@@ -134,9 +140,7 @@ export default function Dashboard() {
 
                 <input
                   value={ticker}
-                  onChange={(e) =>
-                    setTicker(e.target.value)
-                  }
+                  onChange={(e) => setTicker(e.target.value)}
                   placeholder="e.g. DEV"
                   maxLength={6}
                   required
@@ -150,16 +154,11 @@ export default function Dashboard() {
                   type="number"
                   min="1"
                   value={initialPrice}
-                  onChange={(e) =>
-                    setInitialPrice(e.target.value)
-                  }
+                  onChange={(e) => setInitialPrice(e.target.value)}
                 />
               </div>
 
-              <button
-                type="submit"
-                className="btn-primary"
-              >
+              <button type="submit" className="btn-primary">
                 LIST MY STOCK
               </button>
             </form>
@@ -167,6 +166,8 @@ export default function Dashboard() {
 
           {msg && <div className="msg">{msg}</div>}
         </div>
+
+        {/* HOLDINGS */}
         <div className="card">
           <div className="card-label">
             PORTFOLIO HOLDINGS
@@ -190,9 +191,7 @@ export default function Dashboard() {
               <tbody>
                 {holdings.map((h) => {
                   const liveStock = stocks.find(
-                    (s) =>
-                      s._id ===
-                      (h.stock?._id || h.stock)
+                    (s) => s._id === (h.stock?._id || h.stock)
                   );
 
                   const price = liveStock
@@ -209,12 +208,8 @@ export default function Dashboard() {
                     <tr key={h._id}>
                       <td>{ticker}</td>
                       <td>{h.shares}</td>
-                      <td>
-                        ${price.toFixed(2)}
-                      </td>
-                      <td>
-                        ${value.toFixed(2)}
-                      </td>
+                      <td>${price.toFixed(2)}</td>
+                      <td>${value.toFixed(2)}</td>
                     </tr>
                   );
                 })}
