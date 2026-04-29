@@ -4,7 +4,7 @@ import { useMarket } from "../context/MarketContext";
 import api from "../api/axios";
 
 export default function Market() {
-  const { user, refreshUser } = useAuth();
+  const { user, refreshUser, logout } = useAuth();
   const { stocks, connected } = useMarket();
   const [amounts, setAmounts] = useState({});
   const [msgs, setMsgs] = useState({});
@@ -69,10 +69,7 @@ export default function Market() {
           <span className={`ws-dot ${connected ? "green" : "red"}`} />
           <span className="ws-label">{connected ? "Live" : "Offline"}</span>
           <span className="wallet">${user?.wallet?.toFixed(2)}</span>
-          <button className="btn-logout" onClick={logout}>
-            Logout
-          </button>
-
+          <button className="btn-logout" onClick={logout}>Logout</button>
         </div>
       </header>
 
