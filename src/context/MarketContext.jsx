@@ -10,7 +10,6 @@ export const MarketProvider = ({ children }) => {
   const [connected, setConnected] = useState(false);
   const socketRef = useRef(null);
 
-  // Load all stocks from REST
   const fetchStocks = async () => {
     try {
       const res = await api.get("/stocks");
@@ -20,7 +19,6 @@ export const MarketProvider = ({ children }) => {
     }
   };
 
-  // Update a single stock price in state (from WS)
   const updatePrice = ({ ticker, price, id }) => {
     setStocks((prev) =>
       prev.map((s) =>
@@ -29,14 +27,12 @@ export const MarketProvider = ({ children }) => {
     );
   };
 
-  // WebSocket: connect when token is available
   useEffect(() => {
     if (!token) return;
 
     fetchStocks();
-
-    // Pass JWT as Sec-WebSocket-Protocol header
-    const socket = new WebSocket("ws://localhost:5000", token);
+    const wsUrl = import.meta.env.VITE_WS_URL || "ws://localhost:5000";
+    const socket = new WebSocket(wsUrl, token);
     socketRef.current = socket;
 
     socket.onopen = () => {
