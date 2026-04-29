@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "../context/AuthContext";
 import { useMarket } from "../context/MarketContext";
 import api from "../api/axios";
@@ -32,33 +32,9 @@ export default function Dashboard() {
     fetchMyData();
   }, []);
 
-  // если wallet обновился после покупки → обновить holdings
-  useEffect(() => {
-    if (user) {
-      fetchMyData();
-    }
-  }, [user?.wallet]);
-
-  const netWorth = useMemo(() => {
-    if (!user) return 0;
-
-    const holdingsValue = holdings.reduce((sum, h) => {
-      const liveStock = stocks.find(
-        (s) => s._id === (h.stock?._id || h.stock)
-      );
-
-      const price = liveStock
-        ? liveStock.price
-        : h.stock?.price || 0;
-
-      return sum + price * h.shares;
-    }, 0);
-
-    return user.wallet + holdingsValue;
-  }, [user, holdings, stocks]);
-
   const handleCreateStock = async (e) => {
     e.preventDefault();
+    setMsg("");
 
     try {
       const res = await api.post("/stocks/create", {
@@ -67,7 +43,7 @@ export default function Dashboard() {
       });
 
       setMyStock(res.data);
-      setMsg("Stock created");
+      setMsg("Stock created successfully!");
     } catch (err) {
       setMsg("Error creating stock");
     }
@@ -75,6 +51,7 @@ export default function Dashboard() {
 
   const handleUpdatePrice = async (e) => {
     e.preventDefault();
+    setMsg("");
 
     try {
       const res = await api.put(`/stocks/${myStock._id}/price`, {
@@ -83,7 +60,7 @@ export default function Dashboard() {
 
       setMyStock(res.data);
       setNewPrice("");
-      setMsg("Price updated");
+      setMsg("Price updated successfully!");
     } catch (err) {
       setMsg("Error updating price");
     }
@@ -100,75 +77,119 @@ export default function Dashboard() {
 
         <div className="top-bar-right">
           <span className={`ws-dot ${connected ? "green" : "red"}`} />
-          <span>{connected ? "Live" : "Offline"}</span>
+          <span className="ws-label">
+            {connected ? "Live" : "Offline"}
+          </span>
 
           <span className="wallet">
             ${user?.wallet?.toFixed(2)}
           </span>
 
-          <button onClick={logout}>Logout</button>
+          <button className="btn-logout" onClick={logout}>
+            Logout
+          </button>
         </div>
       </header>
 
       <div className="dashboard-grid">
-        <div className="card wide">
-          <div>Total Net Worth</div>
-          <h1>${netWorth.toFixed(2)}</h1>
-          <p>Wallet + Holdings</p>
-        </div>
-
+        {/* MY STOCK */}
         <div className="card">
-          <div>My Stock</div>
+          <div className="card-label">MY STOCK</div>
 
           {myLiveStock ? (
             <>
-              <h2>{myLiveStock.ticker}</h2>
-              <h3>${myLiveStock.price.toFixed(2)}</h3>
+              <div className="card-value">
+                {myLiveStock.ticker}
+              </div>
 
-              <form onSubmit={handleUpdatePrice}>
-                <input
-                  value={newPrice}
-                  onChange={(e) => setNewPrice(e.target.value)}
-                  placeholder="New price"
-                />
-                <button>Update</button>
+              <div className="card-price">
+                ${myLiveStock.price.toFixed(2)}
+              </div>
+
+              <form
+                onSubmit={handleUpdatePrice}
+                style={{ marginTop: "1.5rem" }}
+              >
+                <div className="form-row">
+                  <input
+                    type="number"
+                    step="0.01"
+                    min="0.01"
+                    value={newPrice}
+                    onChange={(e) =>
+                      setNewPrice(e.target.value)
+                    }
+                    placeholder="New price"
+                  />
+
+                  <button
+                    type="submit"
+                    className="btn-small"
+                  >
+                    UPDATE
+                  </button>
+                </div>
               </form>
             </>
           ) : (
             <form onSubmit={handleCreateStock}>
-              <input
-                value={ticker}
-                onChange={(e) => setTicker(e.target.value)}
-                placeholder="Ticker"
-              />
+              <div className="form-group">
+                <label>TICKER SYMBOL</label>
 
-              <input
-                value={initialPrice}
-                onChange={(e) =>
-                  setInitialPrice(e.target.value)
-                }
-              />
+                <input
+                  value={ticker}
+                  onChange={(e) =>
+                    setTicker(e.target.value)
+                  }
+                  placeholder="e.g. DEV"
+                  maxLength={6}
+                  required
+                />
+              </div>
 
-              <button>Create</button>
+              <div className="form-group">
+                <label>INITIAL PRICE</label>
+
+                <input
+                  type="number"
+                  min="1"
+                  value={initialPrice}
+                  onChange={(e) =>
+                    setInitialPrice(e.target.value)
+                  }
+                />
+              </div>
+
+              <button
+                type="submit"
+                className="btn-primary"
+              >
+                LIST MY STOCK
+              </button>
             </form>
           )}
 
-          {msg && <p>{msg}</p>}
+          {msg && <div className="msg">{msg}</div>}
         </div>
 
+        {/* HOLDINGS */}
         <div className="card">
-          <div>Portfolio Holdings</div>
+          <div className="card-label">
+            PORTFOLIO HOLDINGS
+          </div>
 
           {holdings.length === 0 ? (
-            <p>No holdings</p>
+            <p className="empty">
+              No holdings yet. Buy some stocks!
+            </p>
           ) : (
-            <table>
+            <table className="mini-table">
               <thead>
                 <tr>
-                  <th>Ticker</th>
-                  <th>Shares</th>
-                  <th>Price</th>
-                  <th>Value</th>
+                  <th>TICKER</th>
+                  <th>SHARES</th>
+                  <th>LIVE PRICE</th>
+                  <th>VALUE</th>
                 </tr>
               </thead>
 
@@ -186,15 +207,19 @@ export default function Dashboard() {
 
                   const ticker = liveStock
                     ? liveStock.ticker
-                    : h.stock?.ticker || "-";
+                    : h.stock?.ticker || "—";
+
+                  const value = price * h.shares;
 
                   return (
                     <tr key={h._id}>
                       <td>{ticker}</td>
                       <td>{h.shares}</td>
-                      <td>${price.toFixed(2)}</td>
                       <td>
-                        ${(price * h.shares).toFixed(2)}
+                        ${price.toFixed(2)}
+                      </td>
+                      <td>
+                        ${value.toFixed(2)}
                       </td>
                     </tr>
                   );
