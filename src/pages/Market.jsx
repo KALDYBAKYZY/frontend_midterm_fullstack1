@@ -69,6 +69,10 @@ export default function Market() {
           <span className={`ws-dot ${connected ? "green" : "red"}`} />
           <span className="ws-label">{connected ? "Live" : "Offline"}</span>
           <span className="wallet">${user?.wallet?.toFixed(2)}</span>
+          <button className="btn-logout" onClick={logout}>
+            Logout
+          </button>
+
         </div>
       </header>
 
