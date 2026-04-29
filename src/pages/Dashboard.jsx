@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react"; 
+import { useState, useEffect, useMemo } from "react";
 import { useAuth } from "../context/AuthContext";
 import { useMarket } from "../context/MarketContext";
 import api from "../api/axios";
@@ -20,8 +20,8 @@ export default function Dashboard() {
         api.get("/stocks/mine"),
         api.get("/trade/portfolio"),
       ]);
-      setMyStock(stockRes.data);
-      setHoldings(holdingsRes.data);
+      setMyStock(stockRes.data);      // ✅ чистый код
+      setHoldings(holdingsRes.data);  // ✅ чистый код
     } catch (err) {
       console.error("Failed to load dashboard data");
     }
@@ -35,7 +35,7 @@ export default function Dashboard() {
     if (user?.wallet !== undefined) {
       fetchMyData();
     }
-  }, [user?.wallet]); 
+  }, [user?.wallet]);
 
   const netWorth = useMemo(() => {
     if (!user) return 0;
@@ -45,14 +45,14 @@ export default function Dashboard() {
       return sum + price * h.shares;
     }, 0);
     return user.wallet + holdingsValue;
-  }, [user, holdings, stocks]);  
+  }, [user, holdings, stocks]);
 
   const handleCreateStock = async (e) => {
     e.preventDefault();
     setMsg("");
     try {
       const res = await api.post("/stocks/create", { ticker, price: initialPrice });
-      setMyStock(res.data);
+      setMyStock(res.data);           // ✅
       setMsg("Stock created successfully!");
     } catch (err) {
       setMsg(err.response?.data?.message || "Error creating stock");
@@ -67,7 +67,7 @@ export default function Dashboard() {
       const res = await api.put(`/stocks/${myStock._id}/price`, {
         price: parseFloat(newPrice),
       });
-      setMyStock(res.data);
+      setMyStock(res.data);           // ✅
       setMsg(`Price updated to $${res.data.price}`);
       setNewPrice("");
     } catch (err) {
@@ -94,7 +94,7 @@ export default function Dashboard() {
       <div className="dashboard-grid">
         <div className="card wide">
           <div className="card-label">Total Net Worth</div>
-          <div className="card-value big">${netWorth.toFixed(2)}</div>  {/* ✅ */}
+          <div className="card-value big">${netWorth.toFixed(2)}</div>
           <div className="card-sub">Wallet: ${user?.wallet?.toFixed(2)} + Holdings</div>
         </div>
 
@@ -111,7 +111,7 @@ export default function Dashboard() {
                     step="0.01"
                     min="0.01"
                     value={newPrice}
-                    onChange={(e) => setNewPrice(e.target.value)}
+                    onChange={(e) => setNewPrice(e.target.value)}  // ✅
                     placeholder="New price"
                   />
                   <button type="submit" className="btn-small">Update</button>
@@ -124,7 +124,7 @@ export default function Dashboard() {
                 <label>Ticker Symbol</label>
                 <input
                   value={ticker}
-                  onChange={(e) => setTicker(e.target.value)}
+                  onChange={(e) => setTicker(e.target.value)}      // ✅
                   placeholder="e.g. DEV"
                   maxLength={6}
                   required
@@ -135,7 +135,7 @@ export default function Dashboard() {
                 <input
                   type="number"
                   value={initialPrice}
-                  onChange={(e) => setInitialPrice(e.target.value)}
+                  onChange={(e) => setInitialPrice(e.target.value)} // ✅
                   min="1"
                 />
               </div>
@@ -160,7 +160,7 @@ export default function Dashboard() {
                 </tr>
               </thead>
               <tbody>
-                {holdings.map((h) => {
+                {holdings.map((h) => {   // ✅
                   const liveStock = stocks.find((s) => s._id === (h.stock?._id || h.stock));
                   const price = liveStock ? liveStock.price : h.stock?.price || 0;
                   const ticker = liveStock ? liveStock.ticker : h.stock?.ticker || "—";
