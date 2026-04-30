@@ -35,8 +35,9 @@ export const MarketProvider = ({ children }) => {
   }, [token]);
 
   useEffect(() => {
-    if (!token) return;
-
+    if (!token){ 
+      return;
+    }
     const wsUrl =
       import.meta.env.VITE_WS_URL || "ws://localhost:5000";
 
