@@ -20,12 +20,7 @@ export const MarketProvider = ({ children }) => {
 
   const updatePrice = ({ ticker, price }) => {
     setStocks((prev) =>
-      prev.map((s) =>
-        s.ticker === ticker
-          ? { ...s, price }
-          : s
-      )
-    );
+      prev.map((s) => s.ticker === ticker ? { ...s, price }  : s));
   };
 
   useEffect(() => {
@@ -38,8 +33,7 @@ export const MarketProvider = ({ children }) => {
     if (!token){ 
       return;
     }
-    const wsUrl =
-      import.meta.env.VITE_WS_URL || "ws://localhost:5000";
+    const wsUrl = import.meta.env.VITE_WS_URL || "ws://localhost:5000";
 
     const socket = new WebSocket(wsUrl, token);
     socketRef.current = socket;
@@ -57,7 +51,6 @@ export const MarketProvider = ({ children }) => {
     socket.onmessage = (event) => {
       try {
         const data = JSON.parse(event.data);
-
         if (data.type === "TICKER_UPDATE") {
           updatePrice(data.payload);
         }
@@ -68,10 +61,6 @@ export const MarketProvider = ({ children }) => {
 
     socket.onclose = () => {
       setConnected(false);
-
-      interval = setInterval(() => {
-        fetchStocks();
-      }, 2000);
     };
 
     socket.onerror = () => {
